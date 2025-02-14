@@ -1,6 +1,7 @@
 const gameBoard = document.querySelector("#gameBoard");
 const ctx = gameBoard.getContext("2d");
 const scoreText = document.querySelector("#scoreText");
+const recordText = document.querySelector("#recordText");
 const resetBtn = document.querySelector("#resetBtn");
 const gameWidth = gameBoard.width;
 const gameHeight = gameBoard.height;
@@ -15,113 +16,121 @@ let yVelocity = 0;
 let foodX;
 let foodY;
 let score = 0;
+let record = score;
 
 // SNAKE: each object is a body part of the snake
 let snake = [
-    {x:0, y:0},
-    {x:unitSize, y:0},
-    {x:unitSize * 2, y:0},
-    {x:unitSize * 3, y:0},
-    {x:unitSize * 4, y:0}
+    {x: 0, y: 0},
+    {x: unitSize, y: 0},
+    {x: unitSize * 2, y: 0},
+    {x: unitSize * 3, y: 0},
+    {x: unitSize * 4, y: 0}
 ];
 
-// input
+// Input events
 window.addEventListener("keydown", changeDirection);
+window.addEventListener("keydown", (event) => {
+    if (event.key === " ") {
+        event.preventDefault(); // Prevent page scrolling
+        resetGame();
+    }
+});
 resetBtn.addEventListener("click", resetGame);
 
 gameStart();
 
-function gameStart(){
-    running = true; // game's running
+function gameStart() {
+    running = true; // The game is running
     scoreText.textContent = score;
 
     createFood();
     drawFood();
-    nextTick(); // update
+    nextTick(); // Update the game
 };
 
-// refreshes game
-function nextTick(){
+// Game refresh function
+function nextTick() {
     if (running) {
-        setTimeout(()=>{
+        setTimeout(() => {
             clearBoard();
             drawFood();
             moveSnake();
-            drawSnake();
             checkGameOver();
+            drawSnake();
             nextTick();
         }, 75);
-    } else { // game over
+    } else {
         displayGameOver();
     }
-};
+}
 
-
-function clearBoard(){
+// Clears the game board
+function clearBoard() {
     ctx.fillStyle = boardBackground;
     ctx.fillRect(0, 0, gameWidth, gameHeight);
-};
+}
 
-// randomly choose coordinates for the food to be drawn
-function createFood(){
-    // random number for food generation
+// Creates food at random coordinates
+function createFood() {
+    // Random number generator for food placement
     function randomFood(min, max) {
-        return Math.round((Math.random()*(max-min)+min) / unitSize)*unitSize;
+        return Math.round((Math.random() * (max - min) + min) / unitSize) * unitSize;
     }
 
-    // coordinates
+    // Random coordinates for the food
     foodX = randomFood(0, gameWidth - unitSize);
-    foodY = randomFood(0, gameWidth - unitSize);
-};
+    foodY = randomFood(0, gameHeight - unitSize);
+}
 
-// draw food
-function drawFood(){
+// Draws the food on the board
+function drawFood() {
     ctx.fillStyle = foodColor;
     ctx.fillRect(foodX, foodY, unitSize, unitSize);
-};
+}
 
-function moveSnake(){
-    const head = {x: snake[0].x + xVelocity,
-        y: snake[0].y + yVelocity};
-    
-        snake.unshift(head);
+// Moves the snake based on its current velocity
+function moveSnake() {
+    const head = { x: snake[0].x + xVelocity, y: snake[0].y + yVelocity };
+    snake.unshift(head);
 
-        // if food is eaten
-        if (snake[0].x == foodX && snake[0].y == foodY) {
-            score++;
-            scoreText.textContent = score;
-            createFood();
-        } else {
-            snake.pop();
-        }
-};
+    // If the snake eats the food
+    if (snake[0].x == foodX && snake[0].y == foodY) {
+        score++;
+        scoreText.textContent = score;
+        createFood();
+    } else {
+        snake.pop();
+    }
+}
 
-function drawSnake(){
+// Draws the snake on the board
+function drawSnake() {
     ctx.fillStyle = snakeColor;
     ctx.strokeStyle = snakeBorder;
     snake.forEach(snakePart => {
         ctx.fillRect(snakePart.x, snakePart.y, unitSize, unitSize);
         ctx.strokeRect(snakePart.x, snakePart.y, unitSize, unitSize);
     });
-};
+}
 
-function changeDirection(event){
+// Changes the direction of the snake based on the key pressed
+function changeDirection(event) {
     const keyPressed = event.keyCode;
 
-    // keys
+    // Arrow keys
     const LEFT = 37;
     const UP = 38;
     const RIGHT = 39;
     const DOWN = 40;
 
-    // current direction
+    // Current direction of the snake
     const goingUp = (yVelocity == -unitSize);
     const goingDown = (yVelocity == unitSize);
     const goingLeft = (xVelocity == -unitSize);
     const goingRight = (xVelocity == unitSize);
 
-    // change direction without making an u turn
-    switch(true){
+    // Change direction without making a U-turn
+    switch (true) {
         case (keyPressed == LEFT && !goingRight):
             xVelocity = -unitSize;
             yVelocity = 0;
@@ -139,12 +148,57 @@ function changeDirection(event){
             yVelocity = unitSize;
             break;
     }
-};
+}
 
-// game over
-function checkGameOver(){
-    // https://www.youtube.com/watch?v=Je0B3nHhKmM
-};
+// Checks if the game is over
+function checkGameOver() {
+    // Check if the snake touches the borders
+    if (snake[0].x < 0 || snake[0].x >= gameWidth || snake[0].y < 0 || snake[0].y >= gameHeight) {
+        running = false;
+    }
 
-function displayGameOver(){};
-function resetGame(){};
+    // TODO: Check if the snake collides with itself
+
+    if (!running) {
+        displayGameOver();
+    }
+}
+
+// Displays the "Game Over" message
+function displayGameOver() {
+    ctx.font = "50px MV boli";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.fillText("GAME OVER!!", gameWidth / 2, gameHeight / 2);
+    running = false;
+}
+
+// Resets the game
+function resetGame() {
+    // Check if there's a new record
+    if (score > record) {
+        record = score;
+        recordText.textContent = record;
+    }
+
+    // Stop the current game
+    running = false;
+
+    // Reset game parameters
+    score = 0;
+    scoreText.textContent = score;
+    xVelocity = unitSize;
+    yVelocity = 0;
+
+    // Recreate the snake
+    snake = [
+        {x: 0, y: 0},
+        {x: unitSize, y: 0},
+        {x: unitSize * 2, y: 0},
+        {x: unitSize * 3, y: 0},
+        {x: unitSize * 4, y: 0}
+    ];
+
+    // Start the game again after a short delay
+    setTimeout(gameStart, 100);
+}

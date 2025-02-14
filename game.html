@@ -7,7 +7,19 @@
     <body>
         <div id="gameCont">
             <canvas id="gameBoard" width="500" height="500"></canvas>
-            <div id="scoreText">0</div>
+
+            <div id="scoreRecordContainer">
+                <div class="scoreRecordRow">
+                    <span>Score:</span>
+                    <span id="scoreText">0</span>
+                </div>
+                <div class="scoreRecordRow">
+                    <span>Record:</span>
+                    <span id="recordText">0</span>
+                </div>
+            </div>
+
+            
             <button id="resetBtn">Reset</button>
         </div>
         <script src="game.js"></script>
