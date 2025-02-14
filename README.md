@@ -1,2 +1,2 @@
 # snake
-Snake game
+Snake game made in javascript
