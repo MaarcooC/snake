@@ -18,11 +18,11 @@ let foodY;
 let score = 0;
 let record = score;
 
-// mobile
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
+// Mobile Controls
+const upBtn = document.querySelector("#upBtn");
+const leftBtn = document.querySelector("#leftBtn");
+const downBtn = document.querySelector("#downBtn");
+const rightBtn = document.querySelector("#rightBtn");
 
 // SNAKE: each object is a body part of the snake
 let snake = [
@@ -43,20 +43,11 @@ window.addEventListener("keydown", (event) => {
 });
 resetBtn.addEventListener("click", resetGame);
 
-// mobile touchscreen
-gameBoard.addEventListener("touchstart", (event) => {
-    touchStartX = event.touches[0].clientX;
-    touchStartY = event.touches[0].clientY;
-}, false);
-
-gameBoard.addEventListener("touchmove", (event) => {
-    touchEndX = event.touches[0].clientX;
-    touchEndY = event.touches[0].clientY;
-}, false);
-
-gameBoard.addEventListener("touchend", () => {
-    handleSwipe();
-}, false);
+// mobile
+upBtn.addEventListener("click", () => changeDirection({ keyCode: 38 })); // UP
+leftBtn.addEventListener("click", () => changeDirection({ keyCode: 37 })); // LEFT
+downBtn.addEventListener("click", () => changeDirection({ keyCode: 40 })); // DOWN
+rightBtn.addEventListener("click", () => changeDirection({ keyCode: 39 })); // RIGHT
 
 gameStart();
 
@@ -227,29 +218,4 @@ function resetGame() {
 
     // Start the game again after a short delay
     setTimeout(gameStart, 100);
-}
-
-function handleSwipe() {
-    let deltaX = touchEndX - touchStartX;
-    let deltaY = touchEndY - touchStartY;
-
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // horizontal
-        if (deltaX > 0 && xVelocity === 0) {
-            xVelocity = unitSize;
-            yVelocity = 0;
-        } else if (deltaX < 0 && xVelocity === 0) {
-            xVelocity = -unitSize;
-            yVelocity = 0;
-        }
-    } else {
-        // vertical
-        if (deltaY > 0 && yVelocity === 0) {
-            xVelocity = 0;
-            yVelocity = unitSize;
-        } else if (deltaY < 0 && yVelocity === 0) {
-            xVelocity = 0;
-            yVelocity = -unitSize;
-        }
-    }
 }
