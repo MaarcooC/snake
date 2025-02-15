@@ -6,21 +6,18 @@
     </head>
     <body>
         <div id="gameCont">
-            <canvas id="gameBoard" width="500" height="500"></canvas>
-
             <div id="scoreRecordContainer">
                 <div class="scoreRecordRow">
-                    <span>Score:</span>
+                    <img src="images/score_apple.png" alt="Score: " height="30px">
                     <span id="scoreText">0</span>
                 </div>
                 <div class="scoreRecordRow">
-                    <span>Record:</span>
+                    <img src="images/medal.png" alt="Record: " height="30px">
                     <span id="recordText">0</span>
                 </div>
             </div>
-
-            
-            <button id="resetBtn">Reset</button>
+            <canvas id="gameBoard" width="500" height="500"></canvas>
+            <button id="resetBtn">Reset (space)</button>
         </div>
         <script src="game.js"></script>
     </body>

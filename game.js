@@ -5,13 +5,13 @@ const recordText = document.querySelector("#recordText");
 const resetBtn = document.querySelector("#resetBtn");
 const gameWidth = gameBoard.width;
 const gameHeight = gameBoard.height;
-const boardBackground = "white";
+const boardBackground = "rgb(13, 13, 39)";
 const snakeColor = "green";
 const snakeBorder = "black";
-const foodColor = "red";
+const foodColor = "darkred";
 const unitSize = 25;
 let running = false;
-let xVelocity = unitSize;
+let xVelocity = 0;
 let yVelocity = 0;
 let foodX;
 let foodY;
@@ -20,11 +20,11 @@ let record = score;
 
 // SNAKE: each object is a body part of the snake
 let snake = [
-    {x: 0, y: 0},
-    {x: unitSize, y: 0},
-    {x: unitSize * 2, y: 0},
-    {x: unitSize * 3, y: 0},
-    {x: unitSize * 4, y: 0}
+    { x: gameWidth / 2, y: gameHeight / 2 },
+    { x: gameWidth / 2 - unitSize, y: gameHeight / 2 },
+    { x: gameWidth / 2 - unitSize * 2, y: gameHeight / 2 },
+    { x: gameWidth / 2 - unitSize * 3, y: gameHeight / 2 },
+    { x: gameWidth / 2 - unitSize * 4, y: gameHeight / 2 }
 ];
 
 // Input events
@@ -158,6 +158,11 @@ function checkGameOver() {
     }
 
     // TODO: Check if the snake collides with itself
+    for(let i = 1; i < snake.length; i++) {
+        if(snake[i].x == snake[0].x && snake[i].y == snake[0].y) {
+            running = false;
+        }
+    }
 
     if (!running) {
         displayGameOver();
@@ -167,7 +172,7 @@ function checkGameOver() {
 // Displays the "Game Over" message
 function displayGameOver() {
     ctx.font = "50px MV boli";
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.fillText("GAME OVER!!", gameWidth / 2, gameHeight / 2);
     running = false;
@@ -192,11 +197,11 @@ function resetGame() {
 
     // Recreate the snake
     snake = [
-        {x: 0, y: 0},
-        {x: unitSize, y: 0},
-        {x: unitSize * 2, y: 0},
-        {x: unitSize * 3, y: 0},
-        {x: unitSize * 4, y: 0}
+        { x: gameWidth / 2, y: gameHeight / 2 },
+        { x: gameWidth / 2 - unitSize, y: gameHeight / 2 },
+        { x: gameWidth / 2 - unitSize * 2, y: gameHeight / 2 },
+        { x: gameWidth / 2 - unitSize * 3, y: gameHeight / 2 },
+        { x: gameWidth / 2 - unitSize * 4, y: gameHeight / 2 }
     ];
 
     // Start the game again after a short delay
