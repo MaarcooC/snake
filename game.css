@@ -12,7 +12,6 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
 }
 
 #gameBoard {
@@ -55,26 +54,4 @@ html, body {
     background-color: rgb(13, 13, 39);
     border: 1px solid rgb(196, 192, 192);
     color: rgb(196, 192, 192);
-}
-
-#controlsContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-#controlsContainer button {
-    font-size: 30px;
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    background-color: rgb(13, 13, 39);
-    color: rgb(196, 192, 192);
-    border: 1px solid rgb(196, 192, 192);
-}
-
-#controlsContainer button:active {
-    background-color: rgb(30, 30, 80);
 }

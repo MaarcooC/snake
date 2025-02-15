@@ -37,42 +37,6 @@ window.addEventListener("keydown", (event) => {
 });
 resetBtn.addEventListener("click", resetGame);
 
-// event listeners for buttons
-document.querySelector("#leftBtn").addEventListener("click", () => changeDirectionByButton("left"));
-document.querySelector("#upBtn").addEventListener("click", () => changeDirectionByButton("up"));
-document.querySelector("#rightBtn").addEventListener("click", () => changeDirectionByButton("right"));
-document.querySelector("#downBtn").addEventListener("click", () => changeDirectionByButton("down"));
-
-// Function to change direction based on the button clicked
-function changeDirectionByButton(direction) {
-    switch (direction) {
-        case "left":
-            if (xVelocity === 0) {
-                xVelocity = -unitSize;
-                yVelocity = 0;
-            }
-            break;
-        case "up":
-            if (yVelocity === 0) {
-                xVelocity = 0;
-                yVelocity = -unitSize;
-            }
-            break;
-        case "right":
-            if (xVelocity === 0) {
-                xVelocity = unitSize;
-                yVelocity = 0;
-            }
-            break;
-        case "down":
-            if (yVelocity === 0) {
-                xVelocity = 0;
-                yVelocity = unitSize;
-            }
-            break;
-    }
-}
-
 gameStart();
 
 function gameStart() {
