@@ -24,6 +24,21 @@ const leftBtn = document.querySelector("#leftBtn");
 const downBtn = document.querySelector("#downBtn");
 const rightBtn = document.querySelector("#rightBtn");
 
+// check if it's a mobile
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// check if it's a mobile
+function isTouchDevice() {
+    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+}
+
+// shows mobile's control buttons
+if (isMobileDevice() || isTouchDevice()) {
+    document.getElementById("mobileControls").style.display = "block";
+}
+
 // SNAKE: each object is a body part of the snake
 let snake = [
     { x: gameWidth / 2, y: gameHeight / 2 },

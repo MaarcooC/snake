@@ -78,9 +78,3 @@ html, body {
     color: rgb(196, 192, 192);
     margin: 5px;
 }
-
-@media (max-width: 600px) {
-    #mobileControls {
-        display: block;
-    }
-}
