@@ -234,7 +234,7 @@ function handleSwipe() {
     let deltaY = touchEndY - touchStartY;
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Movimento orizzontale
+        // horizontal
         if (deltaX > 0 && xVelocity === 0) {
             xVelocity = unitSize;
             yVelocity = 0;
@@ -243,7 +243,7 @@ function handleSwipe() {
             yVelocity = 0;
         }
     } else {
-        // Movimento verticale
+        // vertical
         if (deltaY > 0 && yVelocity === 0) {
             xVelocity = 0;
             yVelocity = unitSize;
