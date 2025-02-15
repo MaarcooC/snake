@@ -18,27 +18,6 @@ let foodY;
 let score = 0;
 let record = score;
 
-// Mobile Controls
-const upBtn = document.querySelector("#upBtn");
-const leftBtn = document.querySelector("#leftBtn");
-const downBtn = document.querySelector("#downBtn");
-const rightBtn = document.querySelector("#rightBtn");
-
-// check if it's a mobile
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-// check if it's a mobile
-function isTouchDevice() {
-    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-}
-
-// shows mobile's control buttons
-if (isMobileDevice() || isTouchDevice()) {
-    document.getElementById("mobileControls").style.display = "block";
-}
-
 // SNAKE: each object is a body part of the snake
 let snake = [
     { x: gameWidth / 2, y: gameHeight / 2 },
@@ -58,11 +37,41 @@ window.addEventListener("keydown", (event) => {
 });
 resetBtn.addEventListener("click", resetGame);
 
-// mobile
-upBtn.addEventListener("click", () => changeDirection({ keyCode: 38 })); // UP
-leftBtn.addEventListener("click", () => changeDirection({ keyCode: 37 })); // LEFT
-downBtn.addEventListener("click", () => changeDirection({ keyCode: 40 })); // DOWN
-rightBtn.addEventListener("click", () => changeDirection({ keyCode: 39 })); // RIGHT
+// event listeners for buttons
+document.querySelector("#leftBtn").addEventListener("click", () => changeDirectionByButton("left"));
+document.querySelector("#upBtn").addEventListener("click", () => changeDirectionByButton("up"));
+document.querySelector("#rightBtn").addEventListener("click", () => changeDirectionByButton("right"));
+document.querySelector("#downBtn").addEventListener("click", () => changeDirectionByButton("down"));
+
+// Function to change direction based on the button clicked
+function changeDirectionByButton(direction) {
+    switch (direction) {
+        case "left":
+            if (xVelocity === 0) {
+                xVelocity = -unitSize;
+                yVelocity = 0;
+            }
+            break;
+        case "up":
+            if (yVelocity === 0) {
+                xVelocity = 0;
+                yVelocity = -unitSize;
+            }
+            break;
+        case "right":
+            if (xVelocity === 0) {
+                xVelocity = unitSize;
+                yVelocity = 0;
+            }
+            break;
+        case "down":
+            if (yVelocity === 0) {
+                xVelocity = 0;
+                yVelocity = unitSize;
+            }
+            break;
+    }
+}
 
 gameStart();
 
