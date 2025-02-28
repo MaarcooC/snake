@@ -95,18 +95,18 @@ function checkDrawPossibility(){
             PositionFree = False;
             Break;
         }
+    }
+
+    if(PositionFree){
+        failureToDraw = 0;
+        drawFood()
+    }else{
+         failureToDraw++;
     
-        if(PositionFree){
-            failureToDraw = 0;
-            drawFood()
-        }else{
-             failureToDraw++;
-        
-             if(snake.length === 399){
-                 displayYouWin()
-             }else{
-                 createFood()
-            }
+         if(snake.length === 399){
+             displayYouWin()
+         }else{
+             createFood()
         }
     }
 }
