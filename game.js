@@ -87,35 +87,35 @@ function createFood() {
 
 function checkDrawPossibility(){
     let PositionFree = true;
-    for(let i = 0; i < snake.lenght; i++){
-
-    if(foodX != snake[i].x && foodY != snake[i].y){
-        Continue;
-    }else{
-        PositionFree = False;
-        Break;
-    }
-
-    if(PositionFree){
-        failureToDraw = 0;
-        drawFood()
-    }else{
-         failureToDraw++;
     
-         if(failureToDraw === 400){
-             displayYouWin()
-         }else{
-             createFood()
+    for(let i = 0; i < snake.lenght; i++){
+        if(foodX != snake[i].x && foodY != snake[i].y){
+            Continue;
+        }else{
+            PositionFree = False;
+            Break;
+        }
+    
+        if(PositionFree){
+            failureToDraw = 0;
+            drawFood()
+        }else{
+             failureToDraw++;
+        
+             if(snake.length === 399){
+                 displayYouWin()
+             }else{
+                 createFood()
+            }
         }
     }
-
 }
 
 function displayYouWin() {
     ctx.font = "50px MV boli";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    ctx.fillText("You Win", gameWidth /           gameHeight / 2);
+    ctx.fillText("You Win", gameWidth / gameHeight / 2);
     running = false;
 }
 
