@@ -17,6 +17,7 @@ let foodX;
 let foodY;
 let score = 0;
 let record = score;
+let failureToDraw = 0;
 
 // SNAKE: each object is a body part of the snake
 let snake = [
@@ -80,6 +81,42 @@ function createFood() {
     // Random coordinates for the food
     foodX = randomFood(0, gameWidth - unitSize);
     foodY = randomFood(0, gameHeight - unitSize);
+    
+    checkDrawPossibility();
+}
+
+function checkDrawPossibility(){
+    let PositionFree = true;
+    
+    for(let i = 0; i < snake.lenght; i++){
+        if(foodX != snake[i].x && foodY != snake[i].y){
+            Continue;
+        }else{
+            PositionFree = False;
+            Break;
+        }
+    
+        if(PositionFree){
+            failureToDraw = 0;
+            drawFood()
+        }else{
+             failureToDraw++;
+        
+             if(snake.length === 399){
+                 displayYouWin()
+             }else{
+                 createFood()
+            }
+        }
+    }
+}
+
+function displayYouWin() {
+    ctx.font = "50px MV boli";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText("You Win", gameWidth / gameHeight / 2);
+    running = false;
 }
 
 // Draws the food on the board
