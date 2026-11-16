@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <link rel="stylesheet" href="game.css">
         <title>Snake</title>
     </head>
     <body>
         <div id="gameCont">
+            <div id="difficultyContainer">
+                <button class="diffBtn" data-diff="easy">Easy</button>
+                <button class="diffBtn active" data-diff="medium">Medium</button>
+                <button class="diffBtn" data-diff="hard">Hard</button>
+            </div>
+
             <div id="scoreRecordContainer">
                 <div class="scoreRecordRow">
                     <img src="images/score_apple.png" alt="Score: " height="30px">
@@ -16,8 +23,9 @@
                     <span id="recordText">0</span>
                 </div>
             </div>
+
             <canvas id="gameBoard" width="500" height="500"></canvas>
-            <button id="resetBtn">Reset (space)</button>
+            <button id="resetBtn">Reset (Space) | Pausa (P)</button>
         </div>
         <script src="game.js"></script>
     </body>
