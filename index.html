@@ -2,15 +2,16 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="game.css">
         <title>Snake</title>
     </head>
     <body>
         <div id="gameCont">
             <div id="difficultyContainer">
-                <button class="diffBtn" data-diff="easy">Easy</button>
-                <button class="diffBtn active" data-diff="medium">Medium</button>
-                <button class="diffBtn" data-diff="hard">Hard</button>
+                <button class="diffBtn" data-diff="easy">Facile</button>
+                <button class="diffBtn active" data-diff="medium">Media</button>
+                <button class="diffBtn" data-diff="hard">Difficile</button>
             </div>
 
             <div id="scoreRecordContainer">
@@ -25,6 +26,14 @@
             </div>
 
             <canvas id="gameBoard" width="500" height="500"></canvas>
+
+            <div id="mobileControls">
+                <button class="arrowBtn" id="btnUp" data-dir="UP" aria-label="Su">▲</button>
+                <button class="arrowBtn" id="btnLeft" data-dir="LEFT" aria-label="Sinistra">◀</button>
+                <button class="arrowBtn" id="btnDown" data-dir="DOWN" aria-label="Giù">▼</button>
+                <button class="arrowBtn" id="btnRight" data-dir="RIGHT" aria-label="Destra">▶</button>
+            </div>
+
             <button id="resetBtn">Reset (Space) | Pausa (P)</button>
         </div>
         <script src="game.js"></script>

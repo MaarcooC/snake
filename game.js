@@ -4,6 +4,7 @@ const scoreText = document.querySelector("#scoreText");
 const recordText = document.querySelector("#recordText");
 const resetBtn = document.querySelector("#resetBtn");
 const diffButtons = document.querySelectorAll(".diffBtn");
+const arrowButtons = document.querySelectorAll(".arrowBtn");
 
 const gameWidth = gameBoard.width;
 const gameHeight = gameBoard.height;
@@ -41,6 +42,10 @@ let poisonDespawnTimeout = null;
 let poisonDespawnRemaining = 0;
 let poisonDespawnStart = 0;
 
+// Coordinate iniziali per il trascinamento touch (swipe)
+let touchStartX = 0;
+let touchStartY = 0;
+
 let xVelocity = unitSize;
 let yVelocity = 0;
 let foods = [];
@@ -67,6 +72,44 @@ diffButtons.forEach(btn => {
     });
 });
 
+// Eventi pulsanti direzionali mobile
+arrowButtons.forEach(btn => {
+    btn.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        setDirection(btn.dataset.dir);
+    });
+});
+
+// Eventi trascinamento touch (swipe) sul canvas
+gameBoard.addEventListener("touchstart", (event) => {
+    if (event.touches.length > 0) {
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    }
+}, { passive: false });
+
+gameBoard.addEventListener("touchmove", (event) => {
+    event.preventDefault();
+    if (event.touches.length === 0) return;
+
+    const currentX = event.touches[0].clientX;
+    const currentY = event.touches[0].clientY;
+    const diffX = currentX - touchStartX;
+    const diffY = currentY - touchStartY;
+    const minSwipeDistance = 25;
+
+    if (Math.abs(diffX) > minSwipeDistance || Math.abs(diffY) > minSwipeDistance) {
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            setDirection(diffX > 0 ? "RIGHT" : "LEFT");
+        } else {
+            setDirection(diffY > 0 ? "DOWN" : "UP");
+        }
+        // Aggiorna il punto di partenza per permettere cambi continui senza staccare il dito
+        touchStartX = currentX;
+        touchStartY = currentY;
+    }
+}, { passive: false });
+
 gameStart();
 
 function createInitialSnake() {
@@ -77,6 +120,16 @@ function createInitialSnake() {
         { x: gameWidth / 2 - unitSize * 3, y: gameHeight / 2 },
         { x: gameWidth / 2 - unitSize * 4, y: gameHeight / 2 }
     ];
+}
+
+function getCurrentSpeed() {
+    const baseSpeed = DIFFICULTIES[currentDiff].speed;
+    if (currentDiff !== "hard") return baseSpeed;
+
+    if (score >= 30) return 30;
+    if (score >= 20) return 35;
+    if (score >= 10) return 40;
+    return baseSpeed;
 }
 
 function gameStart() {
@@ -117,7 +170,7 @@ function nextTick() {
         if (running) {
             nextTick();
         }
-    }, DIFFICULTIES[currentDiff].speed);
+    }, getCurrentSpeed());
 }
 
 function clearBoard() {
@@ -176,7 +229,6 @@ function schedulePoisonSpawn(customDelay) {
     clearTimeout(poisonSpawnTimeout);
     if (!running) return;
 
-    // Compare ogni 6-10 secondi
     poisonSpawnRemaining = customDelay ?? (6000 + Math.random() * 4000);
     poisonSpawnStart = Date.now();
 
@@ -207,7 +259,7 @@ function spawnPoisonApple() {
     }
 
     poisonApple = { x: newX, y: newY };
-    schedulePoisonDespawn(4000); // Dura 4 secondi
+    schedulePoisonDespawn(4000);
 }
 
 function schedulePoisonDespawn(duration = 4000) {
@@ -231,7 +283,6 @@ function drawPoisonApple() {
     const timeLeft = poisonDespawnRemaining - (Date.now() - poisonDespawnStart);
     const isAboutToVanish = !paused && timeLeft < 1000;
 
-    // Lampeggia leggermente nell'ultimo secondo
     if (isAboutToVanish && Math.floor(Date.now() / 150) % 2 === 0) {
         ctx.fillStyle = "#d2b4de";
     } else {
@@ -269,7 +320,6 @@ function moveSnake() {
         clearTimeout(poisonDespawnTimeout);
         poisonApple = null;
 
-        // Due pop(): uno annulla l'avanzamento, il secondo riduce di 1 il serpente
         snake.pop();
         snake.pop();
 
@@ -317,6 +367,33 @@ function drawSnake() {
     });
 }
 
+function setDirection(direction) {
+    if (changingDirection || paused || !running) return;
+
+    const goingUp = (yVelocity === -unitSize);
+    const goingDown = (yVelocity === unitSize);
+    const goingLeft = (xVelocity === -unitSize);
+    const goingRight = (xVelocity === unitSize);
+
+    if (direction === "LEFT" && !goingRight) {
+        xVelocity = -unitSize;
+        yVelocity = 0;
+        changingDirection = true;
+    } else if (direction === "UP" && !goingDown) {
+        xVelocity = 0;
+        yVelocity = -unitSize;
+        changingDirection = true;
+    } else if (direction === "RIGHT" && !goingLeft) {
+        xVelocity = unitSize;
+        yVelocity = 0;
+        changingDirection = true;
+    } else if (direction === "DOWN" && !goingUp) {
+        xVelocity = 0;
+        yVelocity = unitSize;
+        changingDirection = true;
+    }
+}
+
 function handleKeyDown(event) {
     if (event.key === " ") {
         event.preventDefault();
@@ -329,30 +406,15 @@ function handleKeyDown(event) {
         return;
     }
 
-    if (changingDirection || paused) return;
-
-    const key = event.key;
-    const goingUp = (yVelocity === -unitSize);
-    const goingDown = (yVelocity === unitSize);
-    const goingLeft = (xVelocity === -unitSize);
-    const goingRight = (xVelocity === unitSize);
-
-    if ((key === "ArrowLeft" || key.toLowerCase() === "a") && !goingRight) {
-        xVelocity = -unitSize;
-        yVelocity = 0;
-        changingDirection = true;
-    } else if ((key === "ArrowUp" || key.toLowerCase() === "w") && !goingDown) {
-        xVelocity = 0;
-        yVelocity = -unitSize;
-        changingDirection = true;
-    } else if ((key === "ArrowRight" || key.toLowerCase() === "d") && !goingLeft) {
-        xVelocity = unitSize;
-        yVelocity = 0;
-        changingDirection = true;
-    } else if ((key === "ArrowDown" || key.toLowerCase() === "s") && !goingUp) {
-        xVelocity = 0;
-        yVelocity = unitSize;
-        changingDirection = true;
+    const key = event.key.toLowerCase();
+    if (key === "arrowleft" || key === "a") {
+        setDirection("LEFT");
+    } else if (key === "arrowup" || key === "w") {
+        setDirection("UP");
+    } else if (key === "arrowright" || key === "d") {
+        setDirection("RIGHT");
+    } else if (key === "arrowdown" || key === "s") {
+        setDirection("DOWN");
     }
 }
 
