@@ -24,14 +24,17 @@ html, body {
 
 #difficultyContainer {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
     margin-bottom: 12px;
+    max-width: 95vw;
 }
 
 .diffBtn {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
-    padding: 8px 18px;
+    padding: 8px 15px;
     border-radius: 8px;
     background-color: rgb(13, 13, 39);
     border: 1px solid rgb(196, 192, 192);
@@ -49,6 +52,11 @@ html, body {
     background-color: #2e8b57;
     color: white;
     border-color: #4cd187;
+}
+
+.diffBtn[data-diff="extraHard"].active {
+    background-color: #b02a37;
+    border-color: #ff6b6b;
 }
 
 #scoreRecordContainer {
@@ -86,10 +94,9 @@ html, body {
     max-width: 92vw;
     height: auto;
     display: block;
-    touch-action: none; /* Impedisce lo scroll durante lo swipe sul campo */
+    touch-action: none;
 }
 
-/* Pulsanti direzionali mobile */
 #mobileControls {
     display: none;
     grid-template-areas:
@@ -142,7 +149,6 @@ html, body {
     touch-action: manipulation;
 }
 
-/* Attiva i controlli mobile su schermi piccoli o dispositivi touch */
 @media (max-width: 768px), (pointer: coarse) {
     #mobileControls {
         display: grid;
@@ -150,7 +156,7 @@ html, body {
 
     #scoreRecordContainer,
     #gameBoard {
-        max-width: min(92vw, 44vh);
+        max-width: min(92vw, 42vh);
     }
 
     #scoreText, #recordText {
@@ -158,8 +164,8 @@ html, body {
     }
 
     .diffBtn {
-        font-size: 14px;
-        padding: 6px 14px;
+        font-size: 13px;
+        padding: 6px 11px;
     }
 
     #resetBtn {

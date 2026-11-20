@@ -9,6 +9,7 @@ const arrowButtons = document.querySelectorAll(".arrowBtn");
 const gameWidth = gameBoard.width;
 const gameHeight = gameBoard.height;
 const boardBackground = "rgb(13, 13, 39)";
+const gridColor = "rgba(255, 255, 255, 0.05)";
 const snakeHeadColor = "#32cd32";
 const snakeColor = "green";
 const snakeBorder = "black";
@@ -17,9 +18,46 @@ const poisonColor = "#9b59b6";
 const unitSize = 25;
 
 const DIFFICULTIES = {
-    easy: { speed: 130, appleCount: 2, movingApple: false },
-    medium: { speed: 75, appleCount: 1, movingApple: false },
-    hard: { speed: 45, appleCount: 1, movingApple: true }
+    easy: {
+        speed: 130,
+        appleCount: 2,
+        movingApple: false,
+        maxPoison: 1,
+        poisonMinDelay: 6000,
+        poisonMaxDelay: 10000,
+        doublePoisonChance: 0
+    },
+    medium: {
+        speed: 75,
+        appleCount: 1,
+        movingApple: false,
+        maxPoison: 1,
+        poisonMinDelay: 6000,
+        poisonMaxDelay: 10000,
+        doublePoisonChance: 0
+    },
+    hard: {
+        speed: 45,
+        appleCount: 1,
+        movingApple: true,
+        moveMinDelay: 4000,
+        moveMaxDelay: 5000,
+        maxPoison: 1,
+        poisonMinDelay: 6000,
+        poisonMaxDelay: 10000,
+        doublePoisonChance: 0
+    },
+    extraHard: {
+        speed: 36,
+        appleCount: 1,
+        movingApple: true,
+        moveMinDelay: 3000,
+        moveMaxDelay: 4000,
+        maxPoison: 2,
+        poisonMinDelay: 2500,
+        poisonMaxDelay: 4500,
+        doublePoisonChance: 0.5
+    }
 };
 
 let currentDiff = "medium";
@@ -28,19 +66,16 @@ let paused = false;
 let changingDirection = false;
 let tickTimeout = null;
 
-// Timer spostamento mela (modalità Difficile)
+// Timer spostamento mela (modalità Difficile ed Extra Difficile)
 let foodMoveTimeout = null;
 let foodMoveRemaining = 0;
 let foodMoveStart = 0;
 
-// Gestione mela avvelenata
-let poisonApple = null;
+// Gestione mele avvelenate (array per supportarne fino a 2 contemporaneamente)
+let poisonApples = [];
 let poisonSpawnTimeout = null;
 let poisonSpawnRemaining = 0;
 let poisonSpawnStart = 0;
-let poisonDespawnTimeout = null;
-let poisonDespawnRemaining = 0;
-let poisonDespawnStart = 0;
 
 // Coordinate iniziali per il trascinamento touch (swipe)
 let touchStartX = 0;
@@ -104,7 +139,6 @@ gameBoard.addEventListener("touchmove", (event) => {
         } else {
             setDirection(diffY > 0 ? "DOWN" : "UP");
         }
-        // Aggiorna il punto di partenza per permettere cambi continui senza staccare il dito
         touchStartX = currentX;
         touchStartY = currentY;
     }
@@ -124,11 +158,17 @@ function createInitialSnake() {
 
 function getCurrentSpeed() {
     const baseSpeed = DIFFICULTIES[currentDiff].speed;
-    if (currentDiff !== "hard") return baseSpeed;
 
-    if (score >= 30) return 30;
-    if (score >= 20) return 35;
-    if (score >= 10) return 40;
+    if (currentDiff === "hard") {
+        if (score >= 30) return 30;
+        if (score >= 20) return 35;
+        if (score >= 10) return 40;
+    } else if (currentDiff === "extraHard") {
+        if (score >= 30) return 24;
+        if (score >= 20) return 28;
+        if (score >= 10) return 32;
+    }
+
     return baseSpeed;
 }
 
@@ -137,7 +177,7 @@ function gameStart() {
     paused = false;
     scoreText.textContent = score;
     foods = [];
-    poisonApple = null;
+    poisonApples = [];
 
     const appleCount = DIFFICULTIES[currentDiff].appleCount;
     for (let i = 0; i < appleCount; i++) {
@@ -159,7 +199,7 @@ function nextTick() {
         changingDirection = false;
         clearBoard();
         drawFood();
-        drawPoisonApple();
+        drawPoisonApples();
         moveSnake();
 
         if (!running) return;
@@ -176,6 +216,31 @@ function nextTick() {
 function clearBoard() {
     ctx.fillStyle = boardBackground;
     ctx.fillRect(0, 0, gameWidth, gameHeight);
+
+    // Disegna la griglia sottile sullo sfondo
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+
+    for (let x = unitSize; x < gameWidth; x += unitSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, gameHeight);
+        ctx.stroke();
+    }
+
+    for (let y = unitSize; y < gameHeight; y += unitSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(gameWidth, y);
+        ctx.stroke();
+    }
+}
+
+function isCellOccupied(x, y) {
+    const onSnake = snake.some(part => part.x === x && part.y === y);
+    const onFood = foods.some(food => food.x === x && food.y === y);
+    const onPoison = poisonApples.some(poison => poison.x === x && poison.y === y);
+    return onSnake || onFood || onPoison;
 }
 
 function spawnApple() {
@@ -186,7 +251,7 @@ function spawnApple() {
         return;
     }
 
-    const occupiedCount = snake.length + foods.length + (poisonApple ? 1 : 0);
+    const occupiedCount = snake.length + foods.length + poisonApples.length;
     if (occupiedCount >= totalCells) {
         return;
     }
@@ -197,11 +262,7 @@ function spawnApple() {
     while (!validPosition) {
         newX = Math.floor(Math.random() * (gameWidth / unitSize)) * unitSize;
         newY = Math.floor(Math.random() * (gameHeight / unitSize)) * unitSize;
-
-        const onSnake = snake.some(part => part.x === newX && part.y === newY);
-        const onOtherFood = foods.some(food => food.x === newX && food.y === newY);
-        const onPoison = poisonApple && poisonApple.x === newX && poisonApple.y === newY;
-        validPosition = !onSnake && !onOtherFood && !onPoison;
+        validPosition = !isCellOccupied(newX, newY);
     }
 
     foods.push({ x: newX, y: newY });
@@ -209,9 +270,10 @@ function spawnApple() {
 
 function scheduleAppleMove(customDelay) {
     clearTimeout(foodMoveTimeout);
-    if (!DIFFICULTIES[currentDiff].movingApple || !running) return;
+    const config = DIFFICULTIES[currentDiff];
+    if (!config.movingApple || !running) return;
 
-    foodMoveRemaining = customDelay ?? (4000 + Math.random() * 1000);
+    foodMoveRemaining = customDelay ?? (config.moveMinDelay + Math.random() * (config.moveMaxDelay - config.moveMinDelay));
     foodMoveStart = Date.now();
 
     foodMoveTimeout = setTimeout(() => {
@@ -223,26 +285,38 @@ function scheduleAppleMove(customDelay) {
     }, foodMoveRemaining);
 }
 
-// --- LOGICA MELA AVVELENATA ---
+// --- LOGICA MELE AVVELENATE ---
 
 function schedulePoisonSpawn(customDelay) {
     clearTimeout(poisonSpawnTimeout);
-    if (!running) return;
+    const config = DIFFICULTIES[currentDiff];
+    if (!running || poisonApples.length >= config.maxPoison) return;
 
-    poisonSpawnRemaining = customDelay ?? (6000 + Math.random() * 4000);
+    poisonSpawnRemaining = customDelay ?? (config.poisonMinDelay + Math.random() * (config.poisonMaxDelay - config.poisonMinDelay));
     poisonSpawnStart = Date.now();
 
     poisonSpawnTimeout = setTimeout(() => {
         if (running && !paused) {
-            spawnPoisonApple();
+            const slotsAvailable = config.maxPoison - poisonApples.length;
+            if (slotsAvailable > 0) {
+                const shouldSpawnTwo = slotsAvailable >= 2 && Math.random() < config.doublePoisonChance;
+                const countToSpawn = shouldSpawnTwo ? 2 : 1;
+
+                for (let i = 0; i < countToSpawn; i++) {
+                    spawnPoisonApple();
+                }
+            }
+
+            if (poisonApples.length < config.maxPoison) {
+                schedulePoisonSpawn();
+            }
         }
     }, poisonSpawnRemaining);
 }
 
 function spawnPoisonApple() {
     const totalCells = (gameWidth / unitSize) * (gameHeight / unitSize);
-    if (snake.length + foods.length >= totalCells) {
-        schedulePoisonSpawn();
+    if (snake.length + foods.length + poisonApples.length >= totalCells) {
         return;
     }
 
@@ -252,44 +326,50 @@ function spawnPoisonApple() {
     while (!validPosition) {
         newX = Math.floor(Math.random() * (gameWidth / unitSize)) * unitSize;
         newY = Math.floor(Math.random() * (gameHeight / unitSize)) * unitSize;
-
-        const onSnake = snake.some(part => part.x === newX && part.y === newY);
-        const onFood = foods.some(food => food.x === newX && food.y === newY);
-        validPosition = !onSnake && !onFood;
+        validPosition = !isCellOccupied(newX, newY);
     }
 
-    poisonApple = { x: newX, y: newY };
-    schedulePoisonDespawn(4000);
+    const poisonObj = {
+        x: newX,
+        y: newY,
+        despawnTimeout: null,
+        despawnRemaining: 4000,
+        despawnStart: Date.now()
+    };
+
+    poisonApples.push(poisonObj);
+    startPoisonDespawnTimer(poisonObj, 4000);
 }
 
-function schedulePoisonDespawn(duration = 4000) {
-    clearTimeout(poisonDespawnTimeout);
-    if (!running || !poisonApple) return;
+function startPoisonDespawnTimer(poisonObj, duration) {
+    clearTimeout(poisonObj.despawnTimeout);
+    poisonObj.despawnRemaining = duration;
+    poisonObj.despawnStart = Date.now();
 
-    poisonDespawnRemaining = duration;
-    poisonDespawnStart = Date.now();
-
-    poisonDespawnTimeout = setTimeout(() => {
+    poisonObj.despawnTimeout = setTimeout(() => {
         if (running && !paused) {
-            poisonApple = null;
+            const idx = poisonApples.indexOf(poisonObj);
+            if (idx !== -1) {
+                poisonApples.splice(idx, 1);
+            }
             schedulePoisonSpawn();
         }
-    }, poisonDespawnRemaining);
+    }, duration);
 }
 
-function drawPoisonApple() {
-    if (!poisonApple) return;
+function drawPoisonApples() {
+    poisonApples.forEach(poison => {
+        const timeLeft = poison.despawnRemaining - (Date.now() - poison.despawnStart);
+        const isAboutToVanish = !paused && timeLeft < 1000;
 
-    const timeLeft = poisonDespawnRemaining - (Date.now() - poisonDespawnStart);
-    const isAboutToVanish = !paused && timeLeft < 1000;
+        if (isAboutToVanish && Math.floor(Date.now() / 150) % 2 === 0) {
+            ctx.fillStyle = "#d2b4de";
+        } else {
+            ctx.fillStyle = poisonColor;
+        }
 
-    if (isAboutToVanish && Math.floor(Date.now() / 150) % 2 === 0) {
-        ctx.fillStyle = "#d2b4de";
-    } else {
-        ctx.fillStyle = poisonColor;
-    }
-
-    ctx.fillRect(poisonApple.x, poisonApple.y, unitSize, unitSize);
+        ctx.fillRect(poison.x, poison.y, unitSize, unitSize);
+    });
 }
 
 // ------------------------------
@@ -315,10 +395,12 @@ function moveSnake() {
     const head = { x: snake[0].x + xVelocity, y: snake[0].y + yVelocity };
     snake.unshift(head);
 
-    // Controlla se ha mangiato la mela avvelenata
-    if (poisonApple && head.x === poisonApple.x && head.y === poisonApple.y) {
-        clearTimeout(poisonDespawnTimeout);
-        poisonApple = null;
+    // Controlla se ha mangiato una mela avvelenata
+    const poisonIndex = poisonApples.findIndex(p => p.x === head.x && p.y === head.y);
+    if (poisonIndex !== -1) {
+        const eatenPoison = poisonApples[poisonIndex];
+        clearTimeout(eatenPoison.despawnTimeout);
+        poisonApples.splice(poisonIndex, 1);
 
         snake.pop();
         snake.pop();
@@ -359,6 +441,7 @@ function moveSnake() {
 }
 
 function drawSnake() {
+    ctx.lineWidth = 1;
     snake.forEach((snakePart, index) => {
         ctx.fillStyle = index === 0 ? snakeHeadColor : snakeColor;
         ctx.strokeStyle = snakeBorder;
@@ -428,13 +511,13 @@ function togglePause() {
             foodMoveRemaining = Math.max(0, foodMoveRemaining - (Date.now() - foodMoveStart));
         }
 
-        if (poisonApple) {
-            clearTimeout(poisonDespawnTimeout);
-            poisonDespawnRemaining = Math.max(0, poisonDespawnRemaining - (Date.now() - poisonDespawnStart));
-        } else {
-            clearTimeout(poisonSpawnTimeout);
-            poisonSpawnRemaining = Math.max(0, poisonSpawnRemaining - (Date.now() - poisonSpawnStart));
-        }
+        clearTimeout(poisonSpawnTimeout);
+        poisonSpawnRemaining = Math.max(0, poisonSpawnRemaining - (Date.now() - poisonSpawnStart));
+
+        poisonApples.forEach(poison => {
+            clearTimeout(poison.despawnTimeout);
+            poison.despawnRemaining = Math.max(0, poison.despawnRemaining - (Date.now() - poison.despawnStart));
+        });
 
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
         ctx.fillRect(0, 0, gameWidth, gameHeight);
@@ -447,9 +530,11 @@ function togglePause() {
             scheduleAppleMove(foodMoveRemaining);
         }
 
-        if (poisonApple) {
-            schedulePoisonDespawn(poisonDespawnRemaining);
-        } else {
+        poisonApples.forEach(poison => {
+            startPoisonDespawnTimer(poison, poison.despawnRemaining);
+        });
+
+        if (poisonApples.length < DIFFICULTIES[currentDiff].maxPoison) {
             schedulePoisonSpawn(poisonSpawnRemaining);
         }
 
@@ -493,7 +578,7 @@ function clearAllTimers() {
     clearTimeout(tickTimeout);
     clearTimeout(foodMoveTimeout);
     clearTimeout(poisonSpawnTimeout);
-    clearTimeout(poisonDespawnTimeout);
+    poisonApples.forEach(poison => clearTimeout(poison.despawnTimeout));
 }
 
 function resetGame() {
@@ -501,7 +586,7 @@ function resetGame() {
     running = false;
     paused = false;
     changingDirection = false;
-    poisonApple = null;
+    poisonApples = [];
     score = 0;
     scoreText.textContent = score;
     xVelocity = unitSize;
